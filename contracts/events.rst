@@ -1,4 +1,5 @@
-.. include:: glossaries.rst
+.. include:: glossaries.rst, ! event; anonymous, ! event; indexed, ! event; topic
+
 .. index:: ! event
 
 .. _events:
@@ -62,6 +63,18 @@ Solidity 事件是EVM的日志功能之上的抽象。
 .. note::
     由于交易日志只存储事件数据而不存储类型。你必须知道事件的类型，包括哪个参数被索引，以及该事件是否是匿名的，以便正确解释数据。
     尤其是，有可能使用一个匿名事件来"伪造"另一个事件的签名。
+
+
+.. index:: ! selector; of an event
+
+事件成员 
+=================
+
+- ``event.selector``: 对于非匿名事件，这是一个 ``bytes32`` 值，包含事件签名的 ``keccak256`` 哈希值，在默认主题中使用。
+
+
+示例
+=======
 
 .. code-block:: solidity
 

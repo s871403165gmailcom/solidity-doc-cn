@@ -67,7 +67,6 @@ Using For 可在文件或合约内部及合约级都是有效的。
     }
 
     function contains(Data storage self, uint value)
-        public
         view
         returns (bool)
     {

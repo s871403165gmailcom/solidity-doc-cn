@@ -1,4 +1,5 @@
-.. index:: ! error, revert
+.. index:: ! error, revert, ! selector; of an error
+
 
 .. _errors:
 
@@ -63,3 +64,9 @@ Solidity 中的错误（关键字error）提供了一种方便且省gas的方式
     错误数据应该只用于指示错误，而不是作为控制流的一种手段。原因是默认情况下内部调用的获得的错误数据可能是通过外部调用链冒泡过来。
 
     当这意味着，一个内部调用可以 "伪造"错误数据，使它看起来像是来自被调用的合约。
+
+
+Errors 成员
+=================
+
+- ``error.selector``:  包含错误选择器的  ``bytes4`` 值。

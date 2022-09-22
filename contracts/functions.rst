@@ -37,9 +37,8 @@
     }
 
 .. note::
-    在合约之外定义的函数仍然在合约的上下文内执行。 他们仍然可以访问变量 ``this`` ，也可以调用其他合约，将其发送以太币或销毁调用它们合约等其他事情。
-    与在合约中定义的函数的主要区别为：自由函数不能直接访问存储变量和不在他们的作用域范围内函数。
-
+    在合约之外定义的函数仍然在合约的上下文内执行。 他们仍然可以调用其他合约，将其发送以太币或销毁调用它们的合约等其他事情。
+    与在合约中定义的函数的主要区别为：自由函数不能直接访问存储变量 ``this`` 、存储和不在他们的作用域范围内函数。
 
 
 .. _function-parameters-return-variables:
@@ -71,15 +70,6 @@
     }
 
 函数参数可以当作为本地变量，也可用在等号左边被赋值。
-
-
-.. note::
-
-    :ref:`外部函数<external-function-calls>` 不可以接受多维数组作为参数
-    如果原文件加入 `pragma abicoder v2;` 可以启用ABI v2版编码功能，这此功能可用。
-    （注：在 0.7.0 之前是使用 ``pragma experimental ABIEncoderV2;`` ）
-
-    :ref:`内部函数<external-function-calls>` 则不需要启用ABI v2 就接受多维数组作为参数。
 
 .. index:: return array, return string, array, string, array of strings, dynamic array, variably sized array, return struct, struct
 
@@ -131,9 +121,15 @@
 
 
 .. note::
-   非内部函数有些类型没法返回，比如限制的类型有：多维动态数组、结构体等。
+    非内部函数有些类型没法返回，这些类型如下，以及把他们的组合：
 
-   如果添加  ``pragma abicoder v2;`` 启用 ABI V2 编码器，则是可以的返回更多类型，不过 ``mapping``  仍然是受限的。
+    - mappings （映射）,
+    - 内部函数类型,
+    - 指向存储 ``storage`` 的引用类型,
+    - 多维数组 (仅适用于 :ref:`ABI coder v1 <abi_coder>`),
+    - 机构体 (仅适用于 :ref:`ABI coder v1 <abi_coder>`).
+    
+    这些限制不使用与库函数，因为他们是不同的  :ref:`internal ABI <library-selectors>`.
 
 .. _multi-return:
 
@@ -289,7 +285,7 @@ receive 接收以太函数
 .. warning::
     一个没有定义 fallback 函数或　 receive 函数的合约，直接接收以太币（没有函数调用，即使用 ``send`` 或 ``transfer``）会抛出一个异常，
     并返还以太币（在 Solidity v0.4.0 之前行为会有所不同）。
-    所以如果你想让你的合约接收以太币，必须实现receive函数（使用 payable　fallback 函数不再推荐，因为它会让借口混淆）。
+    所以如果你想让你的合约接收以太币，必须实现receive函数（使用 payable　fallback 函数不再推荐，因为payable　fallback功能被调用，不会因为发送方的接口混乱而失败）。
 
 .. warning::
     一个没有receive函数的合约，可以作为 *coinbase 交易* （又名 *矿工区块回报* ）的接收者或者作为 ``selfdestruct`` 的目标来接收以太币。

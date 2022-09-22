@@ -89,6 +89,7 @@
         function delegate(address to) external {
             // 传引用
             Voter storage sender = voters[msg.sender];
+            require(sender.weight != 0, "You have no right to vote");
             require(!sender.voted, "You already voted.");
 
             require(to != msg.sender, "Self-delegation is disallowed.");
@@ -108,9 +109,11 @@
             // `sender` 是一个引用, 相当于对 `voters[msg.sender].voted` 进行修改
             Voter storage delegate_ = voters[to];
             
-            // Voters cannot delegate to wallets that cannot vote.
+            // Voters cannot delegate to accounts that cannot vote.
             require(delegate_.weight >= 1);
 
+            // Since `sender` is a reference, this
+            // modifies `voters[msg.sender]`.
             sender.voted = true;
             sender.delegate = to;
             
@@ -160,4 +163,7 @@
 可能的优化
 =====================
 
-当前，为了把投票权分配给所有参与者，需要执行很多交易。你有没有更好的主意？
+目前，需要许多交易来分配给所有参与者的投票权。
+此外，如果两个或更多的提案拥有相同的票数， ``winningProposal()`` 无法记录平局。
+你能想出一个办法来解决这些问题吗？
+

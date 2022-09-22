@@ -52,8 +52,8 @@ Solidity 支持多重继承包括多态。
         function unregister() public virtual;
      }
 
-    // 可以多重继承。请注意，owned 也是 Destructible 的基类，
-    // 但只有一个 owned 实例（就像 C++ 中的虚拟继承）。
+    // 可以多重继承。请注意，`Owned` 也是 Destructible 的基类，
+    // 但只有一个 `Owned` 实例（就像 C++ 中的虚拟继承）。
     contract Named is Owned, Destructible {
         constructor(bytes32 name) {
             Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
@@ -64,7 +64,7 @@ Solidity 支持多重继承包括多态。
         // 如果重载函数有不同类型的输出参数，会导致错误。
         // 本地和基于消息的函数调用都会考虑这些重载。
 
- //如果要覆盖函数，则需要使用 `override` 关键字。 如果您想再次覆盖此函数，则需要再次指定`virtual`关键字。
+        //如果要覆盖函数，则需要使用 `override` 关键字。 如果您想再次覆盖此函数，则需要再次指定 `virtual` 关键字。
 
         function destroy() public virtual override {
             if (msg.sender == owner) {
@@ -102,12 +102,12 @@ Solidity 支持多重继承包括多态。
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
 
-    contract owned {
+    contract Owned {
         constructor() { owner = payable(msg.sender); }
         address owner;
     }
 
-    contract Destructible is owned {
+    contract Destructible is Owned {
         function destroy() public virtual {
             if (msg.sender == owner) selfdestruct(owner);
         }
@@ -162,7 +162,7 @@ Solidity 支持多重继承包括多态。
 
 如果 ``Base2`` 调用 ``super`` 的函数，它不会简单在其基类合约上调用该函数。
 相反，它在最终的继承关系图谱的下一个基类合约中调用这个函数，所以它会调用 ``Base1.destroy()``
-（注意最终的继承序列是——从最终派生合约开始：Final, Base2, Base1, Destructible, ownerd）。
+（注意最终的继承序列是——从最终派生合约开始：Final, Base2, Base1, Destructible, Owned）。
 在类中使用 super 调用的实际函数在当前类的上下文中是未知的，尽管它的类型是已知的。
 这与普通的虚拟方法查找类似。
 
@@ -374,7 +374,7 @@ Solidity 支持多重继承包括多态。
     在 0.7.0 版本之前, 你需要通过 ``internal`` 或 ``public`` 指定构造函数的可见性。
 
 
-.. index:: ! base;constructor
+.. index:: ! base;constructor, inheritance list, contract;abstract, abstract contract
 
 基类构造函数的参数
 ===============================
@@ -403,16 +403,28 @@ Solidity 支持多重继承包括多态。
         constructor(uint y) Base(y * y) {}
     }
 
-一种方法直接在继承列表中调用基类构造函数（``is Base(7)``）。
+    // or declare abstract...
+    abstract contract Derived3 is Base {
+    }
+
+    // and have the next concrete derived contract initialize it.
+    contract DerivedFromDerived is Derived3 {
+        constructor() Base(10 + 10) {}
+    }
+
+一种方法直接在继承列表中调用基类构造函数（ ``is Base(7)`` ）。
 另一种方法是像 |modifier| 使用方法一样，
-作为派生合约构造函数定义头的一部分，（``Base(y * y)``)。
+作为派生合约构造函数定义头的一部分，（ ``Base(y * y)`` )。
 如果构造函数参数是常量并且定义或描述了合约的行为，使用第一种方法比较方便。
 如果基类构造函数的参数依赖于派生合约，那么必须使用第二种方法。
 
 参数必须在两种方式中（继承列表或派生构造函数修饰符样式）使用一种 。
 在这两个位置都指定参数则会发生错误。
 
-如果派生合约没有给所有基类合约指定参数，则这个合约将是抽象合约。
+如果派生合约没有给所有基类合约指定参数，则这个合约必须声明为抽象合约。
+在这种情况下，当另一个合约从它派生出来时，另一个合约的继承列表或构造函数必须为所有还没有指定参数的基类提供必要的参数（否则，其他合约也必须被声明为抽象的）。
+例如，在上面的代码片段中，可以看到的 ``Derived3`` 和 ``DerivedFromDerived`` 。
+
 
 
 .. index:: ! inheritance;multiple, ! linearization, ! C3 linearization

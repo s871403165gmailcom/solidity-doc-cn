@@ -182,7 +182,7 @@ EVM 为了实现这些，合约所调用的内部库函数的代码及内部调�
 （将来有可能会解除这些限制）
 
 .. _library-selectors:
-.. index:: selector
+.. index:: ! selector; of a library function
 
 库的函数签名与选择器
 ==============================================
