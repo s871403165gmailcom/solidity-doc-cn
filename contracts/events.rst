@@ -1,6 +1,6 @@
-.. include:: glossaries.rst, ! event; anonymous, ! event; indexed, ! event; topic
+.. include:: glossaries.rst, 
 
-.. index:: ! event
+.. index:: ! event, ! event; anonymous, ! event; indexed, ! event; topic
 
 .. _events:
 
