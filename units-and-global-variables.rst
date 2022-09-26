@@ -347,3 +347,14 @@ string 成员函数
 
 ``type(T).max``
     ``T`` 的最大值。
+
+保留关键字
+=================
+
+以下是保留关键字，可能是将来的语法中的一部分：
+
+``after``, ``alias``, ``apply``, ``auto``, ``byte``, ``case``, ``copyof``, ``default``,
+``define``, ``final``, ``implements``, ``in``, ``inline``, ``let``, ``macro``, ``match``,
+``mutable``, ``null``, ``of``, ``partial``, ``promise``, ``reference``, ``relocatable``,
+``sealed``, ``sizeof``, ``static``, ``supports``, ``switch``, ``typedef``, ``typeof``,
+``var``.

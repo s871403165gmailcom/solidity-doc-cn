@@ -571,8 +571,9 @@ at each version. Backward compatibility is not guaranteed between each version.
 10. ``Exception``: 编译期间的未知失败——应将此报告为一个issue。
 11. ``CompilerError``: 编译器堆栈的无效使用——应将此报告为一个issue。
 12. ``FatalError``: 未正确处理致命错误——应将此报告为一个issue。
-13. ``Warning``: 警告，不会停止编译，但应尽可能处理。
-14. ``Info``: 编译器认为用户可能会发现有用的信息，但并不危险，不一定需要处理。
+13. ``YulException``: Error during Yul Code generation - this should be reported as an issue.
+14. ``Warning``: 警告，不会停止编译，但应尽可能处理。
+15. ``Info``: 编译器认为用户可能会发现有用的信息，但并不危险，不一定需要处理。
 
 
 .. _compiler-tools:

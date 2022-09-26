@@ -310,7 +310,7 @@ Solidity没有字符串操作函数，但是可以使用第三方字符串库，
     动态的 |storage| 数组以及 ``bytes`` 类型（ ``string`` 类型不可以）都有一个 ``push(ｘ)`` 的成员函数，用来在数组末尾添加一个给定的元素，这个函数没有返回值．
 
 **pop()**:
-    变长的 |storage| 数组以及 ``bytes`` 类型（ ``string`` 类型不可以）都有一个 ``pop()`` 的成员函数， 它用来从数组末尾删除元素。 同样的会在移除的元素上隐含调用 :ref:`delete` 。
+    变长的 |storage| 数组以及 ``bytes`` 类型（ ``string`` 类型不可以）都有一个 ``pop()`` 的成员函数， 它用来从数组末尾删除元素。 同样的会在移除的元素上隐含调用 :ref:`delete` ，这个函数没有返回值。
 
 
 .. note::
@@ -333,7 +333,8 @@ Solidity没有字符串操作函数，但是可以使用第三方字符串库，
 
         // 注意下面的代码并不是一对动态数组，
         // 而是一个数组元素为一对变量的动态数组（也就是数组元素为长度为 2 的定长数组的动态数组）。
-        // 因为  T[] 总是 T 的动态数组, 尽管 T 是数组
+        //  T[k] 和 T[] 总是 T 类型的数组, 即使 T 是数组
+        // 因此 bool[2][] 是元素 bool[2] 的动态数组。
         // 所有的状态变量的数据位置都是 storage
         bool[2][] pairsOfFlags;
 
@@ -414,10 +415,125 @@ Solidity没有字符串操作函数，但是可以使用第三方字符串库，
             // 创建一个动态字节数组：
             bytes memory b = new bytes(200);
             for (uint i = 0; i < b.length; i++)
-                b[i] = byte(uint8(i));
+                b[i] = bytes1(uint8(i));
             return b;
         }
     }
+
+
+.. index:: ! array;dangling storage references
+
+Dangling References to Storage Array Elements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When working with storage arrays, you need to take care to avoid dangling references.
+A dangling reference is a reference that points to something that no longer exists or has been
+moved without updating the reference. A dangling reference can for example occur, if you store a
+reference to an array element in a local variable and then ``.pop()`` from the containing array:
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.0 <0.9.0;
+
+    contract C {
+        uint[][] s;
+
+        function f() public {
+            // Stores a pointer to the last array element of s.
+            uint[] storage ptr = s[s.length - 1];
+            // Removes the last array element of s.
+            s.pop();
+            // Writes to the array element that is no longer within the array.
+            ptr.push(0x42);
+            // Adding a new element to ``s`` now will not add an empty array, but
+            // will result in an array of length 1 with ``0x42`` as element.
+            s.push();
+            assert(s[s.length - 1][0] == 0x42);
+        }
+    }
+
+The write in ``ptr.push(0x42)`` will **not** revert, despite the fact that ``ptr`` no
+longer refers to a valid element of ``s``. Since the compiler assumes that unused storage
+is always zeroed, a subsequent ``s.push()`` will not explicitly write zeroes to storage,
+so the last element of ``s`` after that ``push()`` will have length ``1`` and contain
+``0x42`` as its first element.
+
+Note that Solidity does not allow to declare references to value types in storage. These kinds
+of explicit dangling references are restricted to nested reference types. However, dangling references
+can also occur temporarily when using complex expressions in tuple assignments:
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.0 <0.9.0;
+
+    contract C {
+        uint[] s;
+        uint[] t;
+        constructor() {
+            // Push some initial values to the storage arrays.
+            s.push(0x07);
+            t.push(0x03);
+        }
+
+        function g() internal returns (uint[] storage) {
+            s.pop();
+            return t;
+        }
+
+        function f() public returns (uint[] memory) {
+            // The following will first evaluate ``s.push()`` to a reference to a new element
+            // at index 1. Afterwards, the call to ``g`` pops this new element, resulting in
+            // the left-most tuple element to become a dangling reference. The assignment still
+            // takes place and will write outside the data area of ``s``.
+            (s.push(), g()[0]) = (0x42, 0x17);
+            // A subsequent push to ``s`` will reveal the value written by the previous
+            // statement, i.e. the last element of ``s`` at the end of this function will have
+            // the value ``0x42``.
+            s.push();
+            return s;
+        }
+    }
+
+It is always safer to only assign to storage once per statement and to avoid
+complex expressions on the left-hand-side of an assignment.
+
+You need to take particular care when dealing with references to elements of
+``bytes`` arrays, since a ``.push()`` on a bytes array may switch :ref:`from short
+to long layout in storage<bytes-and-string>`.
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.0 <0.9.0;
+
+    // This will report a warning
+    contract C {
+        bytes x = "012345678901234567890123456789";
+
+        function test() external returns(uint) {
+            (x.push(), x.push()) = (0x01, 0x02);
+            return x.length;
+        }
+    }
+
+Here, when the first ``x.push()`` is evaluated, ``x`` is still stored in short
+layout, thereby ``x.push()`` returns a reference to an element in the first storage slot of
+``x``. However, the second ``x.push()`` switches the bytes array to large layout.
+Now the element that ``x.push()`` referred to is in the data area of the array while
+the reference still points at its original location, which is now a part of the length field
+and the assignment will effectively garble the length of ``x``.
+To be safe, only enlarge bytes arrays by at most one element during a single
+assignment and do not simultaneously index-access the array in the same statement.
+
+While the above describes the behaviour of dangling storage references in the
+current version of the compiler, any code with dangling references should be
+considered to have *undefined behaviour*. In particular, this means that
+any future version of the compiler may change the behaviour of code that
+involves dangling references.
+
+Be sure to avoid dangling references in your code!
 
 
 .. index:: ! array;slice

@@ -124,8 +124,14 @@ Mappings 可以看作是一个 `哈希表 <https://en.wikipedia.org/wiki/Hash_ta
 
 .. index:: event
 
-``event Sent(address from, address to, uint amount);`` 这行声明了一个所谓的“事件（event）”，它会在 ``send`` 函数的最后一行被发出。用户界面（当然也包括服务器应用程序）可以监听区块链上正在发送的事件，而不会花费太多成本。一旦它被发出，监听该事件的listener都将收到通知。而所有的事件都包含了 ``from`` ， ``to`` 和 ``amount`` 三个参数，可方便追踪交易。 为了监听这个事件，你可以使用如下JavaScript代码（假设 Coin 是已经通过 `web3.js 创建好的合约对象 <https://learnblockchain.cn/docs/web3js-0.2x/web3.eth.html#contract>`_ ）：
-::
+``event Sent(address from, address to, uint amount);`` 
+
+这行声明了一个所谓的“事件（event）”，它会在 ``send`` 函数的最后一行被发出。用户界面（当然也包括服务器应用程序）可以监听区块链上正在发送的事件，而不会花费太多成本。一旦它被发出，监听该事件的listener都将收到通知。而所有的事件都包含了 ``from`` ， ``to`` 和 ``amount`` 三个参数，可方便追踪交易。 
+
+为了监听这个事件，你可以使用如下JavaScript代码， Coin 是通过 `web3.js 创建的合约对象 <https://learnblockchain.cn/docs/web3.js/web3-eth-contract.html>`_ ， :
+
+
+.. code-block:: javascript
 
     Coin.Sent().watch({}, '', function(error, result) {
         if (!error) {
@@ -263,19 +269,26 @@ Mappings 可以看作是一个 `哈希表 <https://en.wikipedia.org/wiki/Hash_ta
 Gas
 ===
 
-一经创建，每笔交易都收取一定数量的 **gas** ，目的是限制执行交易所需要的工作量和为交易支付手续费。EVM 执行交易时，gas 将按特定规则逐渐耗尽。
+一经创建，每笔交易都收取一定数量的 **gas** ，必须由原始交易发起人（ ``tx.orgin`` ）支付。
+EVM 执行交易时，gas 将按特定规则逐渐耗尽。 无论执行到什么位置，一旦 gas 被耗尽（比如降为负值），将会触发一个 out-of-gas 异常。当前调用帧（call frame）所做的所有状态修改都将被回滚。
+
+
+Gas机制激励了对EVM执行时间的经济使用，同时也补偿了 EVM 执行者（即矿工）的工作。
+由于每个区块有一个最大的Gas数量(区块 gas limit)，它也限制了验证一个区块所需的工作量。
 
 **gas price** 是交易发送者设置的一个值，发送者账户需要预付的手续费= ``gas_price * gas`` 。如果交易执行后还有剩余， gas 会原路返还。
+如果出现异常（exception），回退交易，已经用完的Gas就不会被退还。
 
-无论执行到什么位置，一旦 gas 被耗尽（比如降为负值），将会触发一个 out-of-gas 异常。当前调用帧（call frame）所做的所有状态修改都将被回滚。
-
-译者注：调用帧（call frame），指的是下文讲到的EVM的运行栈（stack）中当前操作所需要的若干元素。
+由于EVM执行者可以选择是否包括交易。交易发送者不能通过设置一个低的Gas价格来滥用系统。
 
 
 .. index:: ! storage, ! memory, ! stack
 
 存储，内存和栈
 =============================
+
+以太坊虚拟机有 3 个区域用来存储数据：
+存储（storage）, 内存（memory） 和 栈（stack）.
 
 每个账户有一块持久化内存区称为 **存储** 。
 存储是将256位字映射到256位字的键值存储区。
@@ -305,7 +318,7 @@ EVM的指令集量应尽量少，以最大限度地避免可能导致共识问�
 如前文所述，被调用的合约（可以和调用者是同一个合约）会获得一块刚刚清空过的内存，并可以访问调用的payload——由被称为 calldata 的独立区域所提供的数据。调用执行结束后，返回数据将被存放在调用方预先分配好的一块内存中。
 调用深度被 **限制** 为 1024 ，因此对于更加复杂的操作，我们应使用循环而不是递归。
 
-.. index:: delegatecall, callcode, library
+.. index:: delegatecall, library
 
 委托调用/代码调用和库
 =====================================
@@ -328,7 +341,7 @@ EVM的指令集量应尽量少，以最大限度地避免可能导致共识问�
 
 合约甚至可以通过一个特殊的指令来创建其他合约（不是简单的调用零地址）。创建合约的调用 **create calls** 和普通消息调用的唯一区别在于，负载会被执行，执行的结果被存储为合约代码，调用者/创建者在栈上得到新合约的地址。
 
-.. index:: selfdestruct
+.. index:: ! selfdestruct, deactivate
 
 失效和自毁
 =============

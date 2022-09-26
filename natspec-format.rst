@@ -187,7 +187,7 @@ other to be used by the developer.
 If the above contract is saved as ``ex1.sol`` then you can generate the
 documentation using:
 
-.. code::
+.. code-block:: shell
 
    solc --userdoc --devdoc ex1.sol
 
@@ -206,7 +206,7 @@ And the output is below.
 The above documentation will produce the following user documentation
 JSON file as output:
 
-.. code::
+.. code-block:: json
 
     {
       "version": 1,

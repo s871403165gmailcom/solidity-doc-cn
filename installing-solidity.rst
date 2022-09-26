@@ -324,6 +324,17 @@ This means that:
     If you do this, however, please remember to pass the ``--no-smt`` option to ``scripts/tests.sh``
     to skip the SMT tests.
 
+.. note::
+    By default the build is performed in *pedantic mode*, which enables extra warnings and tells the
+    compiler to treat all warnings as errors.
+    This forces developers to fix warnings as they arise, so they do not accumulate "to be fixed later".
+    If you are only interested in creating a release build and do not intend to modify the source code
+    to deal with such warnings, you can pass ``-DPEDANTIC=OFF`` option to CMake to disable this mode.
+    Doing this is not recommended for general use but may be necessary when using a toolchain we are
+    not testing with or trying to build an older version with newer tools.
+    If you encounter such warnings, please consider
+    `reporting them <https://github.com/ethereum/solidity/issues/new>`_.
+
 最低的编译器版本
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 

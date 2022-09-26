@@ -123,7 +123,7 @@ JSON 输出
 ``storage`` 对象时一个数组，它的每个元素有如下的形式：
 
 
-.. code::
+.. code-block:: json
 
 
     {
@@ -149,7 +149,7 @@ JSON 输出
 给定的 ``type``，在本例中 ``t_uint256`` 代表 ``types`` 中的一个元素，其形式为：
 
 
-.. code::
+.. code-block:: json
 
     {
         "encoding": "inplace",
@@ -201,7 +201,7 @@ JSON 输出
         bytes b1;
     }
 
-.. code:: json
+.. code-block:: json
 
     {
       "storage": [

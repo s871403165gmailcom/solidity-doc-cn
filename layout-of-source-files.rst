@@ -44,7 +44,7 @@ Pragmas
 关键字 ``pragma`` 版本标识指令，用来启用某些编译器检查， 版本 |pragma| 指令通常只对本文件有效，所以我们需要把这个版本 |pragma| 添加到项目中所有的源文件。
 如果使用了 :ref:`import 导入<import>` 其他的文件, |pragma| 并不会从被导入的文件，加入到导入的文件中。
 
-.. index:: ! pragma, version
+.. index:: ! pragma;version
 
 .. _version_pragma:
 
@@ -77,20 +77,20 @@ Pragmas
   使用版本标准不会改变编译器的版本，它不会启用或关闭任何编译器的功能。
   他仅仅是告知编译器去检查版本是否匹配， 如果不匹配，编译器就会提示一个错误。
 
+.. index:: ! ABI coder, ! pragma; abicoder, pragma; ABIEncoderV2
+.. _abi_coder:
 
 ABI Coder Pragma
 ----------------
-
 By using ``pragma abicoder v1`` or ``pragma abicoder v2`` you can
 select between the two implementations of the ABI encoder and decoder.
 
 The new ABI coder (v2) is able to encode and decode arbitrarily nested
-arrays and structs. It might produce less optimal code and has not
-received as much testing as the old encoder, but is considered
-non-experimental as of Solidity 0.6.0. You still have to explicitly
-activate it using ``pragma abicoder v2;``. Since it will be
-activated by default starting from Solidity 0.8.0, there is the option to select
-the old coder using ``pragma abicoder v1;``.
+arrays and structs. Apart from supporting more types, it involves more extensive
+validation and safety checks, which may result in higher gas costs, but also heightened
+security. It is considered
+non-experimental as of Solidity 0.6.0 and it is enabled by default starting
+with Solidity 0.8.0. The old ABI coder can still be selected using ``pragma abicoder v1;``.
 
 The set of types supported by the new encoder is a strict superset of
 the ones supported by the old one. Contracts that use it can interact with ones
@@ -113,8 +113,7 @@ enough to make the error go away.
   by using ``pragma experimental ABIEncoderV2``, but it was not possible
   to explicitly select coder v1 because it was the default.
 
-
-.. index:: ! pragma, experimental
+.. index:: ! pragma; experimental
 
 .. _experimental_pragma:
 
@@ -124,12 +123,14 @@ enough to make the error go away.
 第2个标注是用来标注实验性阶段的功能，它可以用来启用一些新的编译器功能或语法特性。
 当前支持下面的一些实验性标注:
 
+.. index:: ! pragma; ABIEncoderV2
 
 ABIEncoderV2
 ~~~~~~~~~~~~~~~~
 
-从Solidity 0.7.4开始，  ABI coder v2 不在作为实验特性，而是可以通过``pragma abicoder v2``  启用，查看上面。
+从Solidity 0.7.4开始，  ABI coder v2 不在作为实验特性，而是可以通过 ``pragma abicoder v2``  启用，查看上面说明。
 
+.. index:: ! pragma; SMTChecker
 .. _smt_checker:
 
 SMTChecker

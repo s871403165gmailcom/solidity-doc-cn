@@ -1,10 +1,10 @@
 Solidity 中文文档
 ================================
 
-译者说明：这里是是 **Solidity官方推荐中文版**，本文档根据当前 `Solidity官方文档 <https://solidity.readthedocs.io/>`_ 最新版本（当前为v0.8.13）进行翻译。
+译者说明：这里是是 **Solidity官方推荐中文版**，本文档根据当前 `Solidity官方文档 <https://solidity.readthedocs.io/>`_ 最新版本（当前为v0.8.17）进行翻译。
 
 
-Solidity中文翻译最初由 `HiBlock <http://hiblock.one/>`_ 社区发起，后由 `登链社区 <https://learnblockchain.cn/>`_ 社区持续维护更新。
+Solidity中文翻译最初由 HiBlock 社区发起，后由 `登链社区 <https://learnblockchain.cn/>`_ 社区持续维护更新。
 
 翻译工作是一个持续的过程（这份文档依旧有部分未完成），我们热情邀请热爱区块链技术的小伙伴一起参与，欢迎加入我们 `翻译小组 <https://github.com/lbc-team>`_ 。
 

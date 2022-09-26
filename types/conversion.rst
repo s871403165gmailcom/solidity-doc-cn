@@ -170,8 +170,17 @@
 地址类型
 ---------
 
-参考 :ref:`address_literals` ，通过校验和测试的正确大小的十六进制字面常量会作为 ``address`` 类型。没有其他字面常量可以隐式转换为 ``address`` 类型。
+参考 :ref:`address_literals` ，通过校验和测试的正确大小的十六进制字面常量会作为 ``address`` 类型。
+
+只有  ``bytes20``  和 ``uint160`` 允许显式转换为 ``address`` 类型
+
 
 从 ``bytes20`` 或其他整型显示转换为 ``address`` 类型时，都会作为 ``address payable`` 类型。
 
-一个地址 ``address a`` 可以通过``payable(a)``　转换为　 ``address payable``  类型.
+一个地址 ``address a`` 可以通过 ``payable(a)``　转换为 ``address payable`` 类型.
+
+
+.. note::
+
+    在0.8.0版本之前，可以明确地从任何整数类型（任何大小，有符号或无符号）转换为  ``address`` 或 ``address payable``。
+    从0.8.0开始，只允许从 ``uint160`` 转换。

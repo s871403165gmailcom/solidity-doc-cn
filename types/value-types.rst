@@ -195,6 +195,7 @@
 类型转换:
 
 允许从 ``address payable`` 到 ``address`` 的隐式转换，而从 ``address`` 到 ``address payable`` 必须显示的转换, 通过 ``payable(<address>)`` 进行转换。
+
 .. note::
   
     在0.5版本,执行这种转换的唯一方法是使用中间类型，先转换为 ``uint160`` 如,  address payable ap = address(uint160(addr)); 
@@ -211,20 +212,24 @@
     如果你需要 ``address`` 类型的变量，并计划发送以太币给这个地址，那么声明类型为 ``address payable`` 可以明确表达出你的需求。
     同样，尽量更早对他们进行区分或转换。
 
+    ``address`` 和 ``address payable`` 之间的区别是从0.5.0版本引入的。
+    同样从该版本开始，合约不能隐含地转换为 ``address`` 类型，但仍然可以显式地转换为 ``address`` 或者 ``address payable`` ，如果它们有一个receive 或 payable的回退函数的话。
+
+
 运算符:
 
 * ``<=``, ``<``, ``==``, ``!=``, ``>=`` and ``>``
 
 .. warning::
     如果将使用较大字节数组类型转换为 ``address`` ，例如 ``bytes32`` ，那么 ``address`` 将被截断。
-    为了减少转换歧义，0.4.24及更高编译器版本要求我们在转换中显式截断处理。
-    以32bytes值 ``0x111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFFCCCC`` 为例， 如果使用 ``address(uint160(bytes20(b)))`` 结果是 ``0x111122223333444455556666777788889999aAaa``， 而使用 ``address(uint160(uint256(b)))`` 结果是 ``0x777788889999AaAAbBbbCcccddDdeeeEfFFfCcCc`` 。
+    为了减少转换歧义，从 0.4.24 版本要求我们在转换中显式截断处理。
+    以32bytes值 ``0x111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFFCCCC`` 为例，
+    如果使用 ``address(uint160(bytes20(b)))`` 结果是 ``0x111122223333444455556666777788889999aAaa``， 而使用 ``address(uint160(uint256(b)))`` 结果是 ``0x777788889999AaAAbBbbCcccddDdeeeEfFFfCcCc`` 。
 
 
 .. note::
-    ``address`` 和 ``address payable`` 的区别是在 0.5.0 版本引入的，同样从这个版本开始，合约类型不再继承自地址类型，
-    不过如果合约有可支付的回退（ payable fallback ）函数或receive 函数，合约类型仍然可以显示转换为
-    ``address`` 或 ``address payable`` 。
+    符合 `EIP-55 <https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md>`_  混合大小写的十六进制字符串会自动作为常量 ``address`` 类型。 参考  :ref:`Address Literals<address_literals>` 。
+
 
 .. _members-of-addresses:
 
@@ -431,8 +436,8 @@
 例如， ``69`` 表示数字 69。
 Solidity 中是没有八进制的，因此前置 0 是无效的。
 
-十进制小数字面常量带有一个 ``.``，至少在其一边会有一个数字。
-比如： ``1.``， ``.1``，和 ``1.3``。
+十进制小数字面常量带有一个 ``.``，至少在后边有一个数字。
+比如： ``.1``， 和 ``1.3`` （没有 ``1.0``）。
 
 ``2e10`` 形式的科学符号也是支持的，尽管指数必须是整数，但底数可以是小数， ``MeE`` 的值 ``M * 10**E`` 。
 比如：， ``-2e10``， ``2e-10``， ``2.5e1``。
