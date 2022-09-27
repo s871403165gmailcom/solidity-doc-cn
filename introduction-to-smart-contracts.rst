@@ -366,15 +366,10 @@ EVM的指令集量应尽量少，以最大限度地避免可能导致共识问�
 预编译合约
 =====================
 
-There is a small set of contract addresses that are special:
-The address range between ``1`` and (including) ``8`` contains
-"precompiled contracts" that can be called as any other contract
-but their behaviour (and their gas consumption) is not defined
-by EVM code stored at that address (they do not contain code)
-but instead is implemented in the EVM execution environment itself.
+有一小部分合约地址是特殊的。
+在 ``1`` 和（包括） ``8`` 之间的地址范围包含了 "预编译的合约（precompiled contract）"，他们可以像其他合约一样被调用
+但是他们的行为（和他们的Gas消耗）并不是被存储在该地址的EVM代码所定义(预编译合约它们不包含代码)。
+而是在EVM执行环境本身中实现的。
 
-Different EVM-compatible chains might use a different set of
-precompiled contracts. It might also be possible that new
-precompiled contracts are added to the Ethereum main chain in the future,
-but you can reasonably expect them to always be in the range between
-``1`` and ``0xffff`` (inclusive).
+不同的EVM兼容链可能使用一组不同的预编译的合约。也有可能是新的预编译合约在未来被添加到Ethereum主链中。
+但你可以合理地期望它们总是在 ``1`` 和 ``0xffff``（包括）地址范围内。

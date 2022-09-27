@@ -38,7 +38,7 @@ Solidity 遵循 `the npm 建议 <https://docs.npmjs.com/cli/v7/configuring-npm/p
 
 .. _pragma:
 
-Pragmas
+Pragma
 =========
 
 关键字 ``pragma`` 版本标识指令，用来启用某些编译器检查， 版本 |pragma| 指令通常只对本文件有效，所以我们需要把这个版本 |pragma| 添加到项目中所有的源文件。
@@ -82,36 +82,28 @@ Pragmas
 
 ABI Coder Pragma
 ----------------
-By using ``pragma abicoder v1`` or ``pragma abicoder v2`` you can
-select between the two implementations of the ABI encoder and decoder.
+通过使用 ``pragma abicoder v1`` 或 ``pragma abicoder v2`` ，可以指定ABI encoder and decoder 两个不同的实现。
 
-The new ABI coder (v2) is able to encode and decode arbitrarily nested
-arrays and structs. Apart from supporting more types, it involves more extensive
-validation and safety checks, which may result in higher gas costs, but also heightened
-security. It is considered
-non-experimental as of Solidity 0.6.0 and it is enabled by default starting
-with Solidity 0.8.0. The old ABI coder can still be selected using ``pragma abicoder v1;``.
 
-The set of types supported by the new encoder is a strict superset of
-the ones supported by the old one. Contracts that use it can interact with ones
-that do not without limitations. The reverse is possible only as long as the
-non-``abicoder v2`` contract does not try to make calls that would require
-decoding types only supported by the new encoder. The compiler can detect this
-and will issue an error. Simply enabling ``abicoder v2`` for your contract is
-enough to make the error go away.
+新的ABI coder (v2) 可以任意嵌套数组和结构体的编码和解码。
+除了支持更多类型外，它还涉及到更广泛的验证和安全检查，这可能会导致更高的 Gas 成本，但也会增加安全性。
+在Solidity 0.6.0 时，它不再作为实验性的，在 Solidity 0.8.0 开始是默认启用。
+使用 ``pragma abicoder v1;`` 仍然可以选择旧的ABI编码器。
+
+
+新编码器支持的类型集是旧编码器支持的类型集的严格超集。使用它的合约可以毫无限制地与不使用它的合约进行交互。
+只要非 ``abicoder v2`` 不尝试进行只需要新编码器支持的解码类型的调用，相反的调用也是可以的。
+编译器可以检测到这一点，并发出一个错误。只要为合约启用  ``abicoder v2`` 就可以消除错误。
+
 
 .. note::
-  This pragma applies to all the code defined in the file where it is activated,
-  regardless of where that code ends up eventually. This means that a contract
-  whose source file is selected to compile with ABI coder v1
-  can still contain code that uses the new encoder
-  by inheriting it from another contract. This is allowed if the new types are only
-  used internally and not in external function signatures.
+  pragma 会应用到所定义文件中所有的代码，不管代码在哪里结束。
+  这意味着选择用ABI编码器v1编译源文件的合约仍然可以包含从另一个合约继承的使用新编码器的代码。
+  如果新类型只在内部而不是在外部函数签名中使用，则允许这样做。
+  
 
 .. note::
-  Up to Solidity 0.7.4, it was possible to select the ABI coder v2
-  by using ``pragma experimental ABIEncoderV2``, but it was not possible
-  to explicitly select coder v1 because it was the default.
+  在 Solidity 0.7.4之前, 可以通过使用 ``pragma experimental ABIEncoderV2`` 选择 ABI coder v2， 由于v1 是默认的，因此不可以显式选择。
 
 .. index:: ! pragma; experimental
 
@@ -203,13 +195,12 @@ Solidity 支持的导入语句来模块化代码，其语法跟 JavaScript（从
 导入路径
 ---------
 
-In order to be able to support reproducible builds on all platforms, the Solidity compiler has to
-abstract away the details of the filesystem where source files are stored.
-For this reason import paths do not refer directly to files in the host filesystem.
-Instead the compiler maintains an internal database (*virtual filesystem* or *VFS* for short) where
-each source unit is assigned a unique *source unit name* which is an opaque and unstructured identifier.
-The import path specified in an import statement is translated into a source unit name and used to
-find the corresponding source unit in this database.
+为了能够支持在所有平台上进行可重复的构建，Solidity 编译器必须抽离存储源文件的文件系统的细节。
+由于这个原因，导入路径并不直接指向主机文件系统中的文件。
+
+相反，编译器维护一个内部数据库（ *虚拟文件系统* 或简称 *VFS* ），其中每个源单元都被分配了一个唯一的 *源单元名称* ，这是一个不透明的、非结构化的标识符。
+在导入语句中指定的导入路径被翻译成源单元名称，并用于在这个数据库中找到相应的源单元。
+
 
 Using the :ref:`Standard JSON <compiler-api>` API it is possible to directly provide the names and
 content of all the source files as a part of the compiler input.

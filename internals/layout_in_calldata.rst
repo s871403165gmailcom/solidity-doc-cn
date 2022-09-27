@@ -2,7 +2,7 @@
 .. index: calldata layout
 
 *******************
-Call Data布局
+CallData 布局
 *******************
 
 假定函数调用的输入数据采用 :ref:`ABI 规范 <ABI>`。 其中，ABI规范要求将参数填充为32的倍数

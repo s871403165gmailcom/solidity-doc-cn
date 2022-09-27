@@ -423,13 +423,13 @@ Solidity没有字符串操作函数，但是可以使用第三方字符串库，
 
 .. index:: ! array;dangling storage references
 
-Dangling References to Storage Array Elements
+对存储数组元素的悬空引用
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When working with storage arrays, you need to take care to avoid dangling references.
-A dangling reference is a reference that points to something that no longer exists or has been
-moved without updating the reference. A dangling reference can for example occur, if you store a
-reference to an array element in a local variable and then ``.pop()`` from the containing array:
+
+当使用存储数组时，你需要注意避免悬空的引用。
+悬空引用是指一个指向不再存在的东西的引用，或者是对象被移除而没有更新引用。
+例如，如果你将一个数组元素的引用存储在一个局部的引用中，然后从包含数组中 ``.pop()`` 出来，就会发生悬空引用。
 
 .. code-block:: solidity
 
@@ -440,28 +440,23 @@ reference to an array element in a local variable and then ``.pop()`` from the c
         uint[][] s;
 
         function f() public {
-            // Stores a pointer to the last array element of s.
+            // 保存s最后一个元素的指向。
             uint[] storage ptr = s[s.length - 1];
-            // Removes the last array element of s.
+            //  移除 s 最后一个元素
             s.pop();
-            // Writes to the array element that is no longer within the array.
+            // 向不再属于数组的元素写入数据
             ptr.push(0x42);
-            // Adding a new element to ``s`` now will not add an empty array, but
-            // will result in an array of length 1 with ``0x42`` as element.
+            // 现在添加元素到 ``s`` 不会添加一个空元素, 而是数组长度为 1， ``0x42`` 作为其元素。
             s.push();
             assert(s[s.length - 1][0] == 0x42);
         }
     }
 
-The write in ``ptr.push(0x42)`` will **not** revert, despite the fact that ``ptr`` no
-longer refers to a valid element of ``s``. Since the compiler assumes that unused storage
-is always zeroed, a subsequent ``s.push()`` will not explicitly write zeroes to storage,
-so the last element of ``s`` after that ``push()`` will have length ``1`` and contain
-``0x42`` as its first element.
+``ptr.push(0x42)`` 写入 **不** 会回退, 尽管 ``ptr`` 不再指向有效的 ``s`` 元素， 由于编译器假定未使用的存储空间总是被清零的，
+所以随后的 ``s.push()`` 不会明确地将零写入存储空间。 所以在 ``push()`` 之后， ``s`` 的最后一个元素的长度是 ``1`` ，并且包含 ``0x42`` 作为第一个元素。
+`0x42`作为其第一个元素。 
 
-Note that Solidity does not allow to declare references to value types in storage. These kinds
-of explicit dangling references are restricted to nested reference types. However, dangling references
-can also occur temporarily when using complex expressions in tuple assignments:
+注意，Solidity 不允许在存储中声明对值类型的引用。这些明确的悬空引用被限制在嵌套引用类型中。然而，悬空引用也可能在元组赋值中使用复杂表达式时临时发生。
 
 .. code-block:: solidity
 
@@ -483,32 +478,27 @@ can also occur temporarily when using complex expressions in tuple assignments:
         }
 
         function f() public returns (uint[] memory) {
-            // The following will first evaluate ``s.push()`` to a reference to a new element
-            // at index 1. Afterwards, the call to ``g`` pops this new element, resulting in
-            // the left-most tuple element to become a dangling reference. The assignment still
-            // takes place and will write outside the data area of ``s``.
+            // 下面会先执行 ``s.push()`` 获得到元素 1 的引用。
+            // 然后, 调用 ``g`` pop 出这个新的引用，结果左边的元组元素成了悬空引用。 
+            // 赋值仍然会发生，会被写入 ``s`` 之外的数据区域。
             (s.push(), g()[0]) = (0x42, 0x17);
-            // A subsequent push to ``s`` will reveal the value written by the previous
-            // statement, i.e. the last element of ``s`` at the end of this function will have
-            // the value ``0x42``.
+            // 下面向 ``s`` push 使用上一个语句的值， ``s`` 的最后一个元素将是 ``0x42``
             s.push();
             return s;
         }
     }
 
-It is always safer to only assign to storage once per statement and to avoid
-complex expressions on the left-hand-side of an assignment.
+每条语句只对存储空间进行一次赋值是比较安全的，并且要避免在赋值的左边出现复杂的表达式。
 
-You need to take particular care when dealing with references to elements of
-``bytes`` arrays, since a ``.push()`` on a bytes array may switch :ref:`from short
-to long layout in storage<bytes-and-string>`.
+在处理对 ``bytes`` 数组元素的引用时，你需要特别小心，因为在字节数组上的 ``.push()`` 可能会发生 :ref:` 存储从短到长布局的切换 <bytes-and-string>`。
+
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0 <0.9.0;
 
-    // This will report a warning
+    // 会有警告
     contract C {
         bytes x = "012345678901234567890123456789";
 
@@ -518,22 +508,16 @@ to long layout in storage<bytes-and-string>`.
         }
     }
 
-Here, when the first ``x.push()`` is evaluated, ``x`` is still stored in short
-layout, thereby ``x.push()`` returns a reference to an element in the first storage slot of
-``x``. However, the second ``x.push()`` switches the bytes array to large layout.
-Now the element that ``x.push()`` referred to is in the data area of the array while
-the reference still points at its original location, which is now a part of the length field
-and the assignment will effectively garble the length of ``x``.
-To be safe, only enlarge bytes arrays by at most one element during a single
-assignment and do not simultaneously index-access the array in the same statement.
+这里，当第一个 ``x.push()`` 被执行时， ``x`` 仍然被存储在短的布局，因此 ``x.push()`` 返回对 ``x``第一个存储槽中的元素的引用。
+然而，第二个 ``x.push()`` 将字节数组切换为长布局。
 
-While the above describes the behaviour of dangling storage references in the
-current version of the compiler, any code with dangling references should be
-considered to have *undefined behaviour*. In particular, this means that
-any future version of the compiler may change the behaviour of code that
-involves dangling references.
+现在 ``x.push()`` 所指的元素在数组的数据区，而引用仍然指向它的原始位置，现在它是长度字段的一部分，并且赋值将有效地扰乱 ``x`` 的长度。
+为了安全起见，在一次赋值中最多只扩大字节数组中的一个元素，不要在同一语句中同时对数组进行索引访问。
 
-Be sure to avoid dangling references in your code!
+虽然以上描述了当前版本的编译器中悬空存储引用的行为，但任何带有悬空引用的代码都应该被认为是*未定义的行为*。
+特别是，这意味着任何未来版本的编译器都可能改变涉及悬空引用的代码的行为。
+
+请确保在你的代码中避免悬空引用!
 
 
 .. index:: ! array;slice
