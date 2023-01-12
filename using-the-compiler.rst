@@ -23,19 +23,19 @@
 优化器选项
 -----------------
 
-Before you deploy your contract, activate the optimizer while compiling using ``solc --optimize --bin sourceFile.sol``.
-By default, the optimizer will optimize the contract for 200 runs. 
-If you want to optimize for initial contract deployment and get the smallest output, set it to ``--runs=1``. 
-If you expect many transactions and don't care for higher deployment cost and output size, set ``--runs`` to a high number.
+在部署合约之前，在编译时使用 ``solc --optimize --bin sourceFile.sol`` 激活优化器。
+默认情况下，优化器将使用 200 runs，假设合约在会被调用200次。
+如果你想让最初的合约部署更便宜，而后来的函数执行更昂贵，请设置为 ``--optimize-runs=1``。
+如果你期望合约有很多次交易，并且不在乎更高的部署成本和输出字节码大小，那么把 ``--optimize-runs`` 设置成一个高的数字。
+这个参数对以下方面有影响（将来可能会改变）：
 
-This parameter has effects on the following (this might change in the future):
+- 函数调度程序（路由匹配函数）中二进制搜索的大小
+- 像大数字或字符串等常量的存储方式
 
- - the size of the binary search in the function dispatch routine
- - the way constants like large numbers or strings are stored
 
 .. index:: allowed paths, --allow-paths, base path, --base-path, include paths, --include-path
 
-Base Path and Import Remapping
+基本路径和导入重映射
 ------------------------------------------
 
 命令行编译器会自动从文件系统中读取并导入的文件，但同时，它也支持通过 :ref:`path redirects <import-remapping>` 使用 ``prefix=path`` 选项将路径重定向。比如：
@@ -44,89 +44,92 @@ Base Path and Import Remapping
 
     solc github.com/ethereum/dapp-bin/=/usr/local/lib/dapp-bin/ file.sol
 
-这实质上是告诉编译器去搜索 ``/usr/local/lib/dapp-bin`` 目录下的所有以 ``github.com/ethereum/dapp-bin/`` 开头的文件。
+这实质上是指示编译器去搜索 ``/usr/local/lib/dapp-bin`` 目录下的所有以 ``github.com/ethereum/dapp-bin/`` 开头的文件。
 
-When accessing the filesystem to search for imports, :ref:`paths that do not start with ./
-or ../ <direct-imports>` are treated as relative to the directories specified using ``--base-path`` and ``--include-path`` options (or the current working directory if base path is not specified).
-Furthermore, the part of the path added via these options will not appear in the contract metadata.
 
-For security reasons the compiler has :ref:`restrictions on what directories it can access <allowed-paths>`.
-Directories of source files specified on the command line and target paths of remappings are automatically allowed to be accessed by the file reader, but everything else is rejected by default.
-Additional paths (and their subdirectories) can be allowed via the ``--allow-paths /sample/path,/another/sample/path`` switch.
+当访问文件系统搜索导入文件时，:ref:`不以./或../开头的路径 <direct-imports>` 被视为相对于使用 ``--base-path`` 和 ``--include-path`` 选项指定的目录（如果没有指定基本路径，则是当前工作目录）。
+此外，通过这些选项添加的路径部分将不会出现在合约元数据中。
 
-Everything inside the path specified via ``--base-path`` is always allowed.
+出于安全考虑，编译器 :ref:`对它可以访问的目录有一些限制 <allowed-paths>`。
+在命令行中指定的源文件的目录和重映射的目标路径被自动允许文件阅读器访问，但其他的都是默认为拒绝的。
 
-The above is only a simplification of how the compiler handles import paths.
-For a detailed explanation with examples and discussion of corner cases please refer to the section on :ref:`path resolution <path-resolution>`.
+通过 ``--allow-paths /sample/path,/another/sample/path`` 语句可以允许额外的路径（和它们的子目录）。
+通过 ``--base-path`` 指定的路径内的所有内容都是允许的。
+
+以上只是对编译器如何处理导入路径的一个简化。
+关于详细的解释，包括例子和边缘情况的讨论，请参考 :ref:`路径解析 <path-resolution>` 一节。
+
 
 .. index:: ! linker, ! --link, ! --libraries
 
 .. _library-linking:
 
-Library Linking
+库链接
 ---------------
 
 
-If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form ``__$53aea86b7d70b31448b230b20ae141a537$__``. These are placeholders for the actual library addresses.
-The placeholder is a 34 character prefix of the hex encoding of the keccak256 hash of the fully qualified library name.
-The bytecode file will also contain lines of the form ``// <placeholder> -> <fq library name>`` at the end to help
-identify which libraries the placeholders represent. Note that the fully qualified library name
-is the path of its source file and the library name separated by ``:``.
-You can use ``solc`` as a linker meaning that it will insert the library addresses for you at those points:
+如果你的合约使用 :ref:`库 <libraries>`，
+你会注意到字节码中含有 ``__$53aea86b7d70b31448b230b20ae141a537$__`` 形式的字符串。
+这些是实际库的地址的占位符。此占位符是完全限定库名的keccak256 哈希的十六进制编码的34个字符前缀。
+字节码文件也将包含形式为 ``// <placeholder> -> <fq library name>`` 的代码行，以帮助识别占位符代表的库。
+注意，完全限定的库名是其源文件的路径和用 ``:`` 分隔的库名称。
+你可以使用 ``solc`` 作为链接器，意味着你将在这些地方插入库的地址：
 
 
-Either add ``--libraries "file.sol:Math=0x1234567890123456789012345678901234567890 file.sol:Heap=0xabCD567890123456789012345678901234567890"`` to your command to provide an address for each library (use commas or spaces as separators) or store the string in a file (one library per line) and run ``solc`` using ``--libraries fileName``.
+要么在你的命令中加入 ``--libraries "file.sol:Math=0x1234567890123456789012345678901234567890 file.sol:Heap=0xabCD567890123456789012345678901234567890"`` 为每个库提供一个地址（用逗号或空格作为分隔符），
+要么用 ``-libraries fileName`` 运行 ``solc`` 将字符串存储在一个文件中（每行一个库）。
+
 
 .. note::
-    Starting Solidity 0.8.1 accepts ``=`` as separator between library and address, and ``:`` as a separator is deprecated. It will be removed in the future. Currently ``--libraries "file.sol:Math:0x1234567890123456789012345678901234567890 file.sol:Heap:0xabCD567890123456789012345678901234567890"`` will work too.
+    从Solidity 0.8.1 开始，接受 ``=`` 作为库和地址之间的分隔符，而 ``:`` 作为分隔符已被废弃。
+    它将在未来被删除。目前 ``--libraries "file.sol:Math:0x1234567890123456789012345678901234567890 file.sol:Heap:0xabCD56789012345678901234567890"`` 也可以工作。
 
 .. index:: --standard-json, --base-path
 
-If ``solc`` is called with the option ``--standard-json``, it will expect a JSON input (as explained below) on the standard input, and return a JSON output on the standard output. This is the recommended interface for more complex and especially automated uses. The process will always terminate in a "success" state and report any errors via the JSON output.
-The option ``--base-path`` is also processed in standard-json mode.
+如果调用 ``solc`` 时使用 ``--standard-json`` 选项，它将在标准输入中期待一个JSON 输入（下面解释），
+并在标准输出中返回一个JSON输出。在更复杂的、及自动化使用时的推荐接口。
+该进程将始终以 “成功（success）” 状态终止，并通过JSON输出来报告任何错误。
+选项 ``--base-path`` 也以标准JSON模式处理。
 
-If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__$53aea86b7d70b31448b230b20ae141a537$__``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
+如果调用 ``solc`` 时使用 ``--link`` 选项，所有输入文件都被编译成格式为 ``__$53aea86b7d70b31448b230b20ae141a537$__`` 形式的未链接的二进制文件（十六进制编码），
+并就地链接（如果从标准输入(stdin)读取输入，则被写到标准输出(stdout)）。
+在这种情况下，除了 ``--libraries`` 以外的所有选项都被忽略（包括 ``-o`` ）。
 
 .. warning::
-    Manually linking libraries on the generated bytecode is discouraged because it does not update
-    contract metadata. Since metadata contains a list of libraries specified at the time of
-    compilation and bytecode contains a metadata hash, you will get different binaries, depending
-    on when linking is performed.
-
-    You should ask the compiler to link the libraries at the time a contract is compiled by either
-    using the ``--libraries`` option of ``solc`` or the ``libraries`` key if you use the
-    standard-JSON interface to the compiler.
+    
+    不推荐在生成的字节码上手动链接库文件，因为它不会更新合约元数据。
+    由于元数据包含在编译时指定的库的列表，而字节码包含元数据哈希，
+    你将得到不同的二进制文件，并且这取决于何时进行链接。
+    
+    你应该在编译合约时请求编译器链接库文件，方法是使用 ``solc`` 的 ``--libraries`` 选项
+    或 ``libraries`` 键（如果你使用编译器的标准JSON接口）。
 
 .. note::
-    The library placeholder used to be the fully qualified name of the library itself
-    instead of the hash of it. This format is still supported by ``solc --link`` but
-    the compiler will no longer output it. This change was made to reduce
-    the likelihood of a collision between libraries, since only the first 36 characters
-    of the fully qualified library name could be used.
+    库的占位符曾经是库本身的完全限定名称，而不是它的哈希值。
+    这种格式仍然被 ``solc --link`` 支持，但编译器将不再输出它。
+    这一改变是为了减少库之间发生碰撞的可能性，因为只有完全限定的库名的前36个字符可以被使用。
+
 
 .. _evm-version:
 .. index:: ! EVM version, compile target
 
-Setting the EVM Version to Target
+将EVM版本设置为目标版本
 *********************************
 
-When you compile your contract code you can specify the Ethereum virtual machine
-version to compile for to avoid particular features or behaviours.
+当你编译你的合约代码时，你可以指定以太坊虚拟机版本来编译代码，以避免特定的功能或行为。
 
 .. warning::
+   在错误的EVM版本进行编译会导致错误、奇怪和失败的行为。
+   请确保，特别是在运行一个私有链的情况下，你使用了匹配的EVM版本。
 
-   Compiling for the wrong EVM version can result in wrong, strange and failing
-   behaviour. Please ensure, especially if running a private chain, that you
-   use matching EVM versions.
-
-On the command line, you can select the EVM version as follows:
+在命令行中，你可以选择EVM的版本，方法如下所示：
 
 .. code-block:: shell
 
   solc --evm-version <VERSION> contract.sol
 
-In the :ref:`standard JSON interface <compiler-api>`, use the ``"evmVersion"``
-key in the ``"settings"`` field:
+在 :ref:`标准 JSON 接口 <compiler-api>` 中，使用 ``"settings"`` 字段中的键 ``"evmVersion"``。
+
 
 .. code-block:: javascript
 
@@ -138,37 +141,37 @@ key in the ``"settings"`` field:
       }
     }
 
-Target Options
+EVM版本选项
 --------------
 
-Below is a list of target EVM versions and the compiler-relevant changes introduced
-at each version. Backward compatibility is not guaranteed between each version.
+以下是 EVM 版本的列表，以及每个版本中引入的编译器相关变化。
+每个版本之间不保证向后兼容。
+
 
 - ``homestead``
-   - (oldest version)
+   - （最老的版本）
 - ``tangerineWhistle``
-   - Gas cost for access to other accounts increased, relevant for gas estimation and the optimizer.
-   - All gas sent by default for external calls, previously a certain amount had to be retained.
+   - 访问其他账户的gas成本增加，与gas估算和优化器有关。
+   - 对于外部调用，所有gas都是默认发送的，以前必须保留一定的数量。
 - ``spuriousDragon``
-   - Gas cost for the ``exp`` opcode increased, relevant for gas estimation and the optimizer.
+   -  ``exp`` 操作码的gas成本增加，与gas估计和优化器有关。
 - ``byzantium``
-   - Opcodes ``returndatacopy``, ``returndatasize`` and ``staticcall`` are available in assembly.
-   - The ``staticcall`` opcode is used when calling non-library view or pure functions, which prevents the functions from modifying state at the EVM level, i.e., even applies when you use invalid type conversions.
-   - It is possible to access dynamic data returned from function calls.
-   - ``revert`` opcode introduced, which means that ``revert()`` will not waste gas.
+   - 在汇编中可使用操作码 ``returndatacopy``， ``returndatasize`` 和 ``staticcall``。
+   - ``staticcall`` 操作码在调用非库合约 view 或 pure 函数时使用，它可以防止函数在 EVM 级别修改状态，也就是说，甚至适用于无效的类型转换的情况。
+   - 可以访问从函数调用返回的动态数据。
+   -  引入了 ``revert`` 操作码，这意味着 ``revert()`` 将不会浪费gas。
 - ``constantinople``
-   - Opcodes ``create2`, ``extcodehash``, ``shl``, ``shr`` and ``sar`` are available in assembly.
-   - Shifting operators use shifting opcodes and thus need less gas.
+   - 在汇编中可使用操作码 ``create2`` ， ``extcodehash`` ， ``shl`` ， ``shr`` 和 ``sar``。
+   - 移位运算符使用移位运算码，因此需要的gas较少。
 - ``petersburg``
-   - The compiler behaves the same way as with constantinople.
+   - 编译器的行为与 constantinople 版本的行为相同。
 - ``istanbul``
-   - Opcodes ``chainid`` and ``selfbalance`` are available in assembly.
+   - 在汇编中可使用操作码 ``chainid`` 和 ``selfbalance``。
 - ``berlin``
-   - Gas costs for ``SLOAD``, ``*CALL``, ``BALANCE``, ``EXT*`` and ``SELFDESTRUCT`` increased. The
-     compiler assumes cold gas costs for such operations. This is relevant for gas estimation and
-     the optimizer.
-- ``london`` (**default**)
-   - The block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_) can be accessed via the global ``block.basefee`` or ``basefee()`` in inline assembly.
+   - ``SLOAD`` ， ``*CALL`` ， ``BALANCE`` ， ``EXT*`` 和 ``SELFDESTRUCT`` 的gas成本增加。
+     编译器假设这类操作的gas成本是固定的。这与gas估计和优化器有关。
+- ``london`` (**默认**)
+   -  可以通过全局的 ``block.basefee`` 或内联汇编中的 ``basefee()`` 访问区块的基本费用（base fee），参考： (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ 和 `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_) 
 
 
 .. index:: ! standard JSON, ! --standard-json
@@ -179,10 +182,15 @@ at each version. Backward compatibility is not guaranteed between each version.
 ******************************************
 
 
-下面展示的这些JSON格式是编译器API使用的，当然，在 ``solc`` 上也是可用的。有些字段是可选的（参见注释），并且它们可能会发生变化，但所有的变化都应该是后向兼容的。
+对于更复杂和自动化的设置，可以使用JSON输入输出接口，编译器的所有发行版都提供相同的接口。
 
-编译器API需要JSON格式的输入，并以JSON格式输出编译结果。
+这些字段可能会发生变化，有些字段是可选的（如前所述），但我们尽量只做向后兼容的改动。
 
+编译器API期望JSON格式的输入，并将编译结果输出为JSON格式的输出。
+不使用标准错误输出，进程将始终以 “成功” 状态终止，即使存在错误。错误总是作为JSON输出的一部分报告。
+
+
+以下各小节通过一个例子来描述该格式。
 注释是不允许的，这里仅用于解释目的。
 
 输入说明

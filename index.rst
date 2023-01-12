@@ -1,7 +1,7 @@
 Solidity 中文文档
 ================================
 
-译者说明：这里是是 **Solidity官方推荐中文版**，本文档根据当前 `Solidity官方文档 <https://solidity.readthedocs.io/>`_ 最新版本（当前为v0.8.17）进行翻译。
+译者说明：这里是 **Solidity官方推荐中文版**，本文档根据当前 `Solidity官方文档 <https://solidity.readthedocs.io/>`_ 最新版本（当前为v0.8.17）进行翻译。
 
 
 Solidity中文翻译最初由 HiBlock 社区发起，后由 `登链社区 <https://learnblockchain.cn/>`_ 社区持续维护更新。
